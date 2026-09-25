@@ -1,4 +1,4 @@
-# Documento de Diseño: Sistema de Diagnóstico para Transitorios Astrofísicos (Hito 1)
+# Documento de Diseño: Sistema de Diagnóstico para Transitorios Astrofísicos
 
 ## 1. Planteamiento del Problema
 El sistema implementa un modelo causal probabilístico mediante una Red Bayesiana discreta para la clasificación e inferencia diagnóstica de alertas astronómicas transitorias ($X_{\text{trans}}$) bajo condiciones de observación incompleta o ruidosa.
@@ -7,7 +7,7 @@ El sistema implementa un modelo causal probabilístico mediante una Red Bayesian
 
 ## 2. Topología del Grafo Causal (DAG)
 
-### Diagrama Mermaid (Renderizable en GitHub)
+### Diagrama Mermaid
 ```mermaid
 graph TD
     TG[TipoGalaxia] --> TT[TipoTransitorio]
