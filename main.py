@@ -3,7 +3,7 @@ from src.model import construir_red_transitorios
 
 def main():
     print("=" * 60)
-    print("PROTOTIPO: RED BAYESIANA DE TRANSITORIOS (HITO 1)")
+    print("PROTOTIPO: RED BAYESIANA DE EVENTOS TRANSITORIOS ASTROFÍSICOS")
     print("=" * 60)
     
     modelo = construir_red_transitorios()
