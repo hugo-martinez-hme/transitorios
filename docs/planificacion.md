@@ -2,4 +2,4 @@
 
 ## Diagrama de Gantt
 
-![Diagrama de Gantt](diagrama_gantt.png)
+![Diagrama de Gantt](diagrama_gantt_planificacion.png)
