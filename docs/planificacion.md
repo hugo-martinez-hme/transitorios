@@ -7,7 +7,17 @@
 
 El objetivo de este proyecto es desarrollar un **Sistema de Diagnóstico** basado en un modelo causal probabilístico capaz de clasificar alertas astronómicas transitorias (como supernovas o AGN). Dado que observamos el universo bajo condiciones incompletas y con ruido, el sistema manejará esta incertidumbre para inferir la naturaleza intrínseca de los eventos astronómicos utilizando una Red Bayesiana implementada con la librería `pgmpy`.
 
-## 2. Metodología de Trabajo Conjunto (50/50)
+## 2. Metodología de Desarrollo: CommonKADS en Dos Incrementos
+
+Para el diseño del sistema se adopta la metodología **CommonKADS**, estructurada en un ciclo de vida iterativo en **dos incrementos**:
+
+* **Justificación de CommonKADS:** El proyecto consiste en capturar y formalizar **conocimiento experto** astrofísico para resolver un problema de **diagnóstico bajo incertidumbre**. CommonKADS permite desacoplar el modelo conceptual causal (diseño del DAG) de la parametrización matemática (CPTs) antes de programar.
+* **Descarte de alternativas:** Se descarta *CRISP-DM* por no tratarse de minería inductiva sobre un gran dataset tabular, y *Scrum* porque los sprints rígidos no se ajustan al calendario docente de dos entregas prefijadas.
+* **Articulación en dos incrementos:**
+  * **Incremento 1 (Prototipo funcional - S9):** Modelado del núcleo causal básico (tipo de galaxia, clase de transitorio, cinemática y rayos X) con inferencia preliminar demostrable en `pgmpy`.
+  * **Incremento 2 (Sistema final - S14):** Ampliación con la estructura en V (*collider* de extinción por polvo interestelar y *explaining away*), validación diagnóstica de robustez y memoria técnica final.
+
+## 3. Metodología de Trabajo Conjunto (50/50)
 
 Para garantizar la máxima cohesión técnica y asegurar que no exista ninguna asimetría en nuestro grado de conocimiento sobre el proyecto, hemos decidido adoptar una metodología de **trabajo 100% conjunto y síncrono** en todas las fases. 
 
@@ -15,7 +25,7 @@ Para garantizar la máxima cohesión técnica y asegurar que no exista ninguna a
 *   **Desarrollo (*Pair Programming*):** La implementación técnica se realizará programando en pareja. Esto asegura que ambos comprendemos cada línea de código, la factorización de la distribución conjunta y los algoritmos de inferencia aplicados, preparándonos para dominar el funcionamiento de la aplicación en la defensa final.
 *   **Control de Versiones:** Utilizaremos nuestro repositorio en GitHub (`hugo-martinez-hme/transitorios`) para mantener un registro de nuestros avances.
 
-## 3. Desglose de Tareas Compartidas
+## 4. Desglose de Tareas Compartidas
 
 Dado nuestro enfoque de responsabilidad compartida integral, **Anxo Grandal y Hugo Martínez actuarán conjuntamente (50/50) en el 100% de las siguientes tareas**:
 
@@ -31,7 +41,7 @@ Dado nuestro enfoque de responsabilidad compartida integral, **Anxo Grandal y Hu
     *   Redacción estructurada de los documentos de Planificación, Arquitectura y Memoria final.
     *   Preparación conjunta de las diapositivas, ensayo de la demostración tecnológica y preparación para la ronda de preguntas.
 
-## 4. Cronograma Detallado y Entregables (Evaluación Continua)
+## 5. Cronograma Detallado y Entregables (Evaluación Continua)
 
 Hemos alineado el desarrollo técnico de nuestra Red Bayesiana con el calendario oficial de Evaluación Continua.
 
