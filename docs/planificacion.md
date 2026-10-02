@@ -50,6 +50,7 @@ El desarrollo del proyecto se estructura en el siguiente calendario de trabajo c
 
 | Semana | Hito / Tarea Principal (50/50) | Entregable Oficial |
 | :--- | :--- | :--- |
+| **28 Sep - 2 Oct** | Elaboración del cronograma y adopción de la metodología de Pair Programming. | **Documento de Planificación** |
 | **5 - 9 Oct** | Definición de las variables principales y sus espacios de estados. | Revisión del estado de avance |
 | **19 - 23 Oct** | Análisis de independencias, dependencias directas y estructuras causales. | Revisión del estado de avance |
 | **26 - 30 Oct** | Justificación del grafo causal y factorización de la distribución conjunta. | **Documento de Arquitectura** |
