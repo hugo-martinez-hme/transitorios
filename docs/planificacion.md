@@ -48,17 +48,18 @@ Hemos alineado el desarrollo técnico de nuestra Red Bayesiana con el calendario
 | Semana | Hito / Tarea Principal (Realizada al 50/50) | Entregable Oficial |
 | :--- | :--- | :--- |
 | **14 - 18 Sep** | Elección del dominio: Diagnóstico Astrofísico con incertidumbre observacional. | **Elección de tema** |
+| **21 - 25 Sep** | Documentación sobre la temática y establecimiento de grupos. | Revisión del estado de avance |
 | **28 Sep - 2 Oct** | Elaboración del cronograma y adopción de la metodología de Pair Programming. | **Documento de Planificación** |
 | **5 - 9 Oct** | Definición de las 9 variables principales y sus espacios de estados. | Revisión del estado de avance |
 | **19 - 23 Oct** | Análisis de independencias, dependencias directas y *explaining away*. | Revisión del estado de avance |
 | **26 - 30 Oct** | Justificación del DAG (diagrama Mermaid) y factorización de la conjunta. | **Documento de Arquitectura** |
 | **2 - 6 Nov** | Setup de `pgmpy` y programación de las primeras CPTs en pareja. | Revisión del estado de avance |
-| **9 - 13 Nov** | Red Bayesiana instanciada en código. Primeras inferencias funcionales demostrables. | **Prototipo Tecnológico (Código Parcial)** |
-| **16 - 20 Nov** | Ajuste fino de probabilidades (prior de galaxias, extinción de polvo). | Revisión del estado de avance |
+| **9 - 13 Nov** | **Cierre del Incremento 1.** Red Bayesiana del núcleo causal instanciada en código. Primeras inferencias funcionales demostrables. | **Prototipo Tecnológico (Código Parcial)** |
+| **16 - 20 Nov** | Inicio del Incremento 2: ampliación con la estructura en V (collider de extinción por polvo) y ajuste fino de probabilidades (prior de galaxias, extinción de polvo). | Revisión del estado de avance |
 | **23 - 27 Nov** | Propuesta del índice y secciones de la memoria final pactadas con el profesor. | **Estructura de la Memoria** |
-| **30 Nov - 4 Dic** | Redacción conjunta de la memoria, revisión de citas y preparación de diapositivas. | Revisión del estado de avance |
-| **7 - 18 Dic** | Presentación, demostración del software y respuesta conjunta a preguntas. | **Defensa del proyecto** |
-| **18 Dic** | Inclusión del completo desarrollado (`pgmpy`) y entrega definitiva. | **Entrega de la Memoria** |
+| **30 Nov - 4 Dic** | **Cierre del Incremento 2.** Validación diagnóstica y análisis de sensibilidad. Redacción conjunta final de la memoria, revisión de citas y preparación de diapositivas. | Revisión del estado de avance |
+| **7 - 18 Dic** | Presentación, demostración del software y respuesta conjunta a preguntas (el sistema queda cerrado antes de la primera defensa). | **Defensa del proyecto** |
+| **18 Dic** | Inclusión del código completo desarrollado (`pgmpy`) y entrega definitiva. **Fecha interna de entrega: 14-15 dic.** | **Entrega de la Memoria** |
 ## Diagrama de Gantt
 
 ![Diagrama de Gantt](diagrama_gantt_planificacion.png)
