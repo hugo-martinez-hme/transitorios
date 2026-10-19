@@ -202,41 +202,109 @@ Donde la notación corresponde a:
 
 ---
 
-## 5. Análisis de Estructuras Causales e Independencias ($d$-separación)
+---
 
-El grafo de 12 variables articula las tres estructuras fundamentales del razonamiento probabilístico en redes bayesianas:
+## 5. Conocimiento Probabilístico: Fuentes, Supuestos y Parametrización (CPTs)
 
-1. **Cadenas Causales (Cascadas Lineales):**
-   * *Ejemplo:* `Galaxia_Anfitriona` ($G$) $\rightarrow$ `Ubicacion_Galactica` ($U$) $\rightarrow$ `Extincion_Polvo` ($E$).
-   * *Propiedad de independencia:* Conocer el tipo de galaxia influye a priori en la extinción por polvo esperada; sin embargo, una vez observada la coordenada exacta del evento dentro de la galaxia ($U$), la extinción por polvo se vuelve condicionalmente independiente de la morfología galáctica global: $(G \perp E \mid U)$.
-   * *Ejemplo físico-espectral:* `Tipo_Transitorio` ($T$) $\rightarrow$ `Velocidad_Expansion` ($V$) $\rightarrow$ `Anchura_Lineas_Espectrales` ($A$). Para una temperatura dada ($\theta$), el ancho de línea observado depende directamente de la cinemática de expansión: $(T \perp A \mid V, \theta)$.
+Para dotar de conocimiento cuantitativo a la red bayesiana (objetos `TabularCPD` en `pgmpy`), la asignación de probabilidades se fundamenta en catálogos de astronomía observacional (*Zwicky Transient Facility - ZTF* y *Transient Name Server - TNS*) y principios de astrofísica estelar, aplicando los siguientes **supuestos de modelado**:
 
-2. **Bifurcaciones (Causas Comunes):**
-   * *Ejemplo:* `Temperatura_Intrinseca` ($\theta$) $\leftarrow$ `Tipo_Transitorio` ($T$) $\rightarrow$ `Velocidad_Expansion` ($V$).
-   * *Propiedad de independencia:* Marginalmente, la temperatura y la velocidad de expansión están correlacionadas porque ambas provienen de la naturaleza del fenómeno; al fijar el tipo de transitorio ($T$), ambas propiedades físicas quedan $d$-separadas: $(\theta \perp V \mid T)$.
+* **Restricciones deterministas por leyes físicas (Probabilidades extremas $\approx 0.001 - 0.99$):**
+  * En galaxias elípticas (`Galaxia_Anfitriona = Eliptica`), la tasa de formación de estrellas masivas es nula, por lo que la probabilidad condicional de observar una supernova de colapso de núcleo (`SN_II`) se fija en un valor residual ($P(T=\text{SN\_II} \mid G=\text{Eliptica}) = 0.01$).
+  * Los núcleos galácticos activos (`AGN`) están gravitacionalmente ligados al centro galáctico, asignando $P(U=\text{Nuclear} \mid T=\text{AGN}) = 0.98$.
+* **Degradación fotométrica acoplada (Doble Colisionador):**
+  * La presencia de polvo severo (`Extincion_Polvo = Severa`) desplaza la probabilidad hacia estados observados de menor energía: incrementa $P(C=\text{Rojo} \mid \theta=\text{Alta}, E=\text{Severa})$ (enrojecimiento por dispersión de Rayleigh/Mie) e incrementa $P(M=\text{Debil} \mid L_p=\text{Muy\_Alta}, E=\text{Severa})$ (absorción lumínica).
+* **Complejidad paramétrica acotada:**
+  * Ningún nodo supera los 2 padres directos, lo que mantiene el tamaño máximo de las Tablas de Probabilidad Condicional (CPTs) en $3 \times (4 \times 3) = 36$ parámetros (24 parámetros libres), garantizando que el sistema sea interpretable y verificable sin sobreajuste.
 
-3. **Estructuras en V (Doble Colisionador y *Explaining Away*):**
-   * *Colisionador 1 (Enrojecimiento):* `Temperatura_Intrinseca` ($\theta$) $\rightarrow$ `Color_Observado` ($C$) $\leftarrow$ `Extincion_Polvo` ($E$).
-   * *Colisionador 2 (Atenuación):* `Luminosidad_Pico` ($L_p$) $\rightarrow$ `Magnitud_Aparente` ($M$) $\leftarrow$ `Extincion_Polvo` ($E$).
-   * *Razonamiento inter-causal:* A priori, la densidad del polvo interestelar es independiente de la temperatura y luminosidad real de la estrella: $(E \perp \theta)$ y $(E \perp L_p)$. Al observar en el telescopio un objeto **Rojo** ($C = \text{Rojo}$) y **Débil** ($M = \text{Debil}$), se activan ambos colisionadores. Si además sabemos que el evento ocurrió en el núcleo o plano espiral (alta probabilidad de $E = \text{Severa}$), el polvo explica simultáneamente el enrojecimiento y el bajo brillo aparente, permitiendo inferir que el fenómeno subyacente es en realidad muy energético y caliente (como una `SN_Ia` o un `AGN` oscurecido).
+| Nodo (Variable) | Padres Condicionantes | Dimensión de la CPT | Fuente / Criterio Astrofísico Principal |
+| :--- | :--- | :--- | :--- |
+| **`Galaxia_Anfitriona`** | Ninguno (Prior) | $3 \times 1$ | Fracción morfológica en sondeos locales (predominio espiral). |
+| **`Tipo_Transitorio`** | `Galaxia_Anfitriona` | $4 \times 3$ | Tasas relativas de supernovas por morfología galáctica (Li et al.). |
+| **`Ubicacion_Galactica`** | `Galaxia`, `Tipo_Transitorio` | $3 \times 12$ | Distribución radial de explosiones y confinamiento central de AGN. |
+| **`Extincion_Polvo`** | `Ubicacion_Galactica` | $3 \times 3$ | Densidad de columna de polvo según región (núcleo/disco vs halo). |
+| **`Temperatura_Intrinseca`** | `Tipo_Transitorio` | $3 \times 4$ | Temperatura efectiva de cuerpo negro en el pico de emisión. |
+| **`Luminosidad_Pico`** | `Tipo_Transitorio`, `Temperatura` | $3 \times 12$ | Magnitud absoluta típica (escala de $-19\text{ mag}$ en SN Ia a variables). |
+| **`Velocidad_Expansion`** | `Tipo_Transitorio` | $3 \times 4$ | Energía cinética de eyección ($>10.000\text{ km/s}$ en SN vs reposo estelar). |
+| **`Magnitud_Aparente`** | `Luminosidad_Pico`, `Extincion_Polvo` | $3 \times 9$ | Ecuación del módulo de distancia con atenuación $A_V$ por polvo. |
+| **`Color_Observado`** | `Temperatura`, `Extincion_Polvo` | $3 \times 9$ | Índice de color $(g-r)$ alterado por exceso de color $E(B-V)$. |
+| **`Emision_RayosX`** | `Tipo_Transitorio`, `Temperatura` | $3 \times 12$ | Emisión por efecto Compton inverso en AGN y choques circunestelares. |
+| **`Anchura_Lineas_Espectrales`** | `Velocidad_Expansion`, `Temperatura` | $3 \times 9$ | Ensanchamiento Doppler ($\Delta\lambda/\lambda \propto v/c$) y térmico. |
+| **`Forma_Curva_Luz`** | `Tipo_Transitorio`, `Velocidad_Expansion` | $3 \times 12$ | Tiempos de difusión fotónica, meseta de recombinación H y caída de $^{56}\text{Ni}$. |
 
 ---
 
-## 6. Especificación de la Inferencia y Casos de Prueba (Validación del Diseño)
+## 6. Diseño de la Inferencia y Comprobación (Casos de Prueba)
 
-Siguiendo la metodología de diseño de diagnóstico bayesiano, las variables de la red se particionan durante la ejecución en tres conjuntos:
+Durante la operación del sistema, el motor `VariableElimination` resuelve la consulta de diagnóstico particionando las 12 variables en tres roles:
 
-* **Variable de Consulta (Diagnóstico):** `Tipo_Transitorio` ($T$).
-* **Variables de Evidencia ($\mathbf{e}$):** Subconjunto de observables disponibles en la alerta telescópica (`Galaxia_Anfitriona`, `Ubicacion_Galactica`, `Color_Observado`, `Magnitud_Aparente`, `Emision_RayosX`, `Anchura_Lineas_Espectrales`, `Forma_Curva_Luz`). El sistema soporta evidencia incompleta.
-* **Variables Ocultas / Latentes ($\mathbf{Y}$):** Estados físicos internos no medidos directamente (`Temperatura_Intrinseca`, `Luminosidad_Pico`, `Velocidad_Expansion`, `Extincion_Polvo`), que se marginalizan mediante el algoritmo de Eliminación de Variables (`VariableElimination`):
+* **Consulta (Objetivo diagnóstico):** `Tipo_Transitorio` ($T \in \{\text{SN\_Ia}, \text{SN\_II}, \text{AGN}, \text{Variable\_Estelar}\}$).
+* **Evidencias disponibles ($\mathbf{e}$):** Cualquier subconjunto de las 7 variables observables introducidas por el usuario (`Galaxia_Anfitriona`, `Ubicacion_Galactica`, `Color_Observado`, `Magnitud_Aparente`, `Emision_RayosX`, `Anchura_Lineas_Espectrales`, `Forma_Curva_Luz`). No se exige introducir todas las evidencias para diagnosticar.
+* **Datos desconocidos / Variables latentes ($\mathbf{Y}$):** Las propiedades físicas internas no observadas directamente (`Temperatura_Intrinseca`, `Luminosidad_Pico`, `Velocidad_Expansion`, `Extincion_Polvo`) y cualquier observable omitido por el usuario, que son marginalizados automáticamente en el cálculo:
 
 $$P(T \mid \mathbf{e}) = \alpha \sum_{\mathbf{y} \in \mathbf{Y}} P(T, \mathbf{e}, \mathbf{y})$$
 
-### 6.1. Batería de Casos de Prueba Esperados
+### 6.1. Casos de Prueba y Resultados Esperados
 
-| ID Caso | Escenario Astrofísico | Evidencias Introducidas ($\mathbf{e}$) | Comportamiento Causal / Resultado Esperado |
+| ID | Escenario de Comprobación | Evidencias de Entrada ($\mathbf{e}$) | Resultado Esperado en el Diagnóstico |
 | :--- | :--- | :--- | :--- |
-| **CP-01** | **Supernova Ia canónica en galaxia elíptica** | `Galaxia = Eliptica`, `Ubicacion = Halo`, `Magnitud = Brillante`, `Color = Azul`, `Curva = Decaimiento_Rapido` | Probabilidad nula para `SN_II` (sin formación estelar en elípticas) y nula para `AGN` (fuera del núcleo). Diagnóstico dominante: **`SN_Ia` (> 90%)**. |
-| **CP-02** | **Efecto *Explaining Away* por polvo severo** | `Galaxia = Espiral`, `Ubicacion = Brazo_Espiral`, `Color = Rojo`, `Magnitud = Debil`, `Anchura_Lineas = Anchas` | Aunque el objeto se ve rojo y débil, las líneas anchas indican alta velocidad de eyección y el brazo espiral aporta alta `Extincion_Polvo`. El sistema descarta `Variable_Estelar` y diagnostica **Supernova (`SN_Ia` / `SN_II`) oscurecida**. |
-| **CP-03** | **Núcleo Galáctico Activo (AGN)** | `Ubicacion = Nuclear`, `Emision_RayosX = Intensa`, `Curva = Estocastica` | La combinación de posición central, emisión continua de rayos X y variabilidad estocástica eleva la probabilidad posterior de **`AGN` (> 95%)**. |
-| **CP-04** | **Alerta temprana con evidencia incompleta** | Solo fotometría inicial: `Galaxia = Espiral`, `Color = Azul`, `Magnitud = Brillante` (sin espectro ni curva de luz) | El motor marginaliza las variables latentes y espectrales no observadas, repartiendo la probabilidad entre los eventos más energéticos (**`SN_Ia` y `SN_II`**) frente a `Variable_Estelar`. |
+| **CP-01** | **Supernova Ia en galaxia elíptica** | `Galaxia = Eliptica`, `Ubicacion = Halo`, `Magnitud = Brillante`, `Color = Azul`, `Curva = Decaimiento_Rapido` | Descarte de `SN_II` (por galaxia elíptica) y de `AGN` (por ubicación en halo). Probabilidad dominante para **`SN_Ia` (> 90%)**. |
+| **CP-02** | **Supernova oscurecida por polvo (*Explaining Away*)** | `Galaxia = Espiral`, `Ubicacion = Brazo_Espiral`, `Color = Rojo`, `Magnitud = Debil`, `Anchura_Lineas = Anchas` | El brazo espiral eleva la probabilidad de `Extincion_Polvo = Severa`, explicando el color rojo y el brillo débil. Las líneas anchas confirman explosión, diagnosticando **Supernova (`SN_II` / `SN_Ia`)** en lugar de `Variable_Estelar`. |
+| **CP-03** | **Núcleo Galáctico Activo (AGN)** | `Ubicacion = Nuclear`, `Emision_RayosX = Intensa`, `Curva = Estocastica` | La firma conjunta de rayos X intensos en el núcleo con variabilidad caótica asigna la máxima probabilidad a **`AGN` (> 95%)**. |
+| **CP-04** | **Alerta fotométrica temprana (Evidencia parcial)** | `Galaxia = Espiral`, `Color = Azul`, `Magnitud = Brillante` *(sin datos espectrales ni curva de luz)* | El sistema opera bajo incertidumbre marginalizando los observables faltantes y concentrando la probabilidad en los fenómenos de alta energía (**`SN_Ia` y `SN_II`**). |
+
+---
+
+## 7. Interfaz Prevista (Prototipo de Interacción CLI)
+
+La interfaz de usuario (`ConsoleView`) se diseña como un panel interactivo en terminal estructurado en dos pantallas principales: captura guiada de evidencias (permitiendo omitir datos desconocidos) y visualización explicativa del diagnóstico.
+
+### 7.1. Pantalla de Introducción de Evidencias
+```text
+======================================================================
+   SISTEMA DE DIAGNÓSTico BAYESIANO DE TRANSITORIOS ASTROFÍSICOS
+======================================================================
+Seleccione las evidencias observadas en la alerta telescópica
+(Pulse [0] si el dato es desconocido / no observado):
+
+1. Galaxia Anfitriona:        [1] Espiral   [2] Elíptica   [3] Irregular   [0] Desconocida
+   > Selección: 1
+
+2. Ubicación Galáctica:       [1] Nuclear   [2] Brazo Espiral   [3] Halo   [0] Desconocida
+   > Selección: 2
+
+3. Color Observado:           [1] Azul      [2] Neutro     [3] Rojo        [0] Desconocido
+   > Selección: 3
+
+4. Magnitud Aparente:         [1] Brillante [2] Intermedia [3] Débil       [0] Desconocida
+   > Selección: 3
+
+5. Anchura Líneas Espectral.: [1] Anchas    [2] Estrechas  [3] Ausentes    [0] Desconocida
+   > Selección: 1
+
+6. Emisión de Rayos X:        [1] Intensa   [2] Débil      [3] Nula        [0] Desconocida
+   > Selección: 0  (No observada)
+
+7. Forma de Curva de Luz:     [1] Decaimiento Rápido  [2] Meseta  [3] Estocástica  [0] Desconocida
+   > Selección: 2
+```
+
+### 7.2. Pantalla de Resultados del Diagnóstico
+```text
+----------------------------------------------------------------------
+   RESULTADO DE LA INFERENCIA BAYESIANA (VariableElimination)
+----------------------------------------------------------------------
+Evidencias activas: Galaxia=Espiral, Ubicación=Brazo_Espiral, Color=Rojo,
+                    Magnitud=Débil, Líneas=Anchas, Curva=Meseta
+Variables ocultas/marginalizadas: Emision_RayosX, Temperatura_Intrinseca,
+                                  Luminosidad_Pico, Velocidad_Expansion, Extincion_Polvo
+
+DISTRIBUCIÓN DE PROBABILIDAD POSTERIOR P(Tipo_Transitorio | Evidencias):
+  * SN_II (Supernova Colapso) : ██████████████████████████░░░░  86.4 %
+  * SN_Ia (Supernova Termon.) : ████░░░░░░░░░░░░░░░░░░░░░░░░░░  11.8 %
+  * AGN (Núcleo Activo)       : █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   1.5 %
+  * Variable_Estelar          : ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0.3 %
+
+----------------------------------------------------------------------
+[DIAGNÓSTICO PRINCIPAL]: SN_II (Confianza: 86.4% - CONCLUYENTE)
+----------------------------------------------------------------------
+```
