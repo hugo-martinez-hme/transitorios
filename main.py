@@ -1,28 +1,15 @@
-from pgmpy.inference import VariableElimination
-from src.model import construir_red_transitorios
+# main.py
+from src.model.transient_model import TransientModel
+from src.view.console_view import ConsoleView
+from src.controller.diagnosis_controller import DiagnosisController
+
 
 def main():
-    print("=" * 60)
-    print("PROTOTIPO: RED BAYESIANA DE EVENTOS TRANSITORIOS ASTROFÍSICOS")
-    print("=" * 60)
-    
-    modelo = construir_red_transitorios()
-    inferencia = VariableElimination(modelo)
+    modelo = TransientModel()
+    vista = ConsoleView()
+    controlador = DiagnosisController(modelo=modelo, vista=vista)
+    controlador.iniciar()
 
-    print(f"Modelo compilado correctamente.")
-    print(f"Nodos registrados: {len(modelo.nodes())}")
-    print(f"Arcos causales:    {len(modelo.edges())}")
 
-    print("\n[Prueba Diagnóstica Preliminar]")
-    print("Evidencias: OffsetGalactico = Nuclear, EmisionRayosX = Detectada")
-    
-    resultado = inferencia.query(
-        variables=['TipoTransitorio'],
-        evidence={'OffsetGalactico': 'Nuclear', 'EmisionRayosX': 'Detectada'}
-    )
-    print("\nDistribución a posteriori inferida:")
-    print(resultado)
-    print("=" * 60)
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,0 +1,43 @@
+[
+  {
+    "id": "CP-01",
+    "descripcion": "Supernova Ia canonica en galaxia eliptica",
+    "evidencias": {
+      "galaxia": "Eliptica",
+      "ubicacion": "Halo",
+      "color": "Azul",
+      "magnitud": "Brillante",
+      "curva_luz": "Decaimiento_Rapido"
+    }
+  },
+  {
+    "id": "CP-02",
+    "descripcion": "Supernova oscurecida por polvo (Explaining Away)",
+    "evidencias": {
+      "galaxia": "Espiral",
+      "ubicacion": "Brazo_Espiral",
+      "color": "Rojo",
+      "magnitud": "Debil",
+      "anchura_lineas": "Anchas"
+    }
+  },
+  {
+    "id": "CP-03",
+    "descripcion": "Nucleo Galactico Activo (AGN)",
+    "evidencias": {
+      "ubicacion": "Nuclear",
+      "rayos_x": "Intensa",
+      "curva_luz": "Estocastica"
+    }
+  },
+  {
+    "id": "CP-04",
+    "descripcion": "Alerta fotometrica temprana (Planificacion activa IG)",
+    "evidencias": {
+      "galaxia": "Espiral",
+      "ubicacion": "Brazo_Espiral",
+      "color": "Azul",
+      "magnitud": "Brillante"
+    }
+  }
+]
