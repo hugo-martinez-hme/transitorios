@@ -55,7 +55,7 @@ class DiagnosisController:
             elif opcion == "3":
                 self.cargar_lote_json()
             elif opcion == "0":
-                print("\nCerrando el sistema RAIN. ¡Hasta pronto!")
+                print("\nSaliendo del sistema de diagnóstico.")
                 break
             else:
                 self.vista.mostrar_error("Seleccione una opción válida entre 0 y 3.")
