@@ -1,0 +1,133 @@
+{
+    "n_evaluated": 120,
+    "classes": [
+        "SN_Ia",
+        "SN_II",
+        "AGN",
+        "Variable_Estelar"
+    ],
+    "global_accuracy": 1.0,
+    "multiclass_brier_score": 0.0062,
+    "classification_metrics": {
+        "accuracy": 1.0,
+        "macro_avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "weighted_avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "per_class": {
+            "SN_Ia": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1_score": 1.0,
+                "support": 30
+            },
+            "SN_II": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1_score": 1.0,
+                "support": 30
+            },
+            "AGN": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1_score": 1.0,
+                "support": 30
+            },
+            "Variable_Estelar": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1_score": 1.0,
+                "support": 30
+            }
+        }
+    },
+    "confusion_matrix_raw": [
+        [
+            30,
+            0,
+            0,
+            0
+        ],
+        [
+            0,
+            30,
+            0,
+            0
+        ],
+        [
+            0,
+            0,
+            30,
+            0
+        ],
+        [
+            0,
+            0,
+            0,
+            30
+        ]
+    ],
+    "confusion_matrix_normalized": [
+        [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+        ],
+        [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+        ],
+        [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+        ],
+        [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+        ]
+    ],
+    "explaining_away_analysis": {
+        "stratified_by_true_dust": {
+            "Baja": {
+                "count": 38,
+                "accuracy": 1.0,
+                "mean_confidence": 0.9604,
+                "mean_shannon_entropy_bits": 0.1868,
+                "mean_inferred_p_dust_severa": 0.1172
+            },
+            "Moderada": {
+                "count": 45,
+                "accuracy": 1.0,
+                "mean_confidence": 0.9838,
+                "mean_shannon_entropy_bits": 0.114,
+                "mean_inferred_p_dust_severa": 0.2211
+            },
+            "Severa": {
+                "count": 37,
+                "accuracy": 1.0,
+                "mean_confidence": 0.9735,
+                "mean_shannon_entropy_bits": 0.1623,
+                "mean_inferred_p_dust_severa": 0.6399
+            }
+        },
+        "photometric_collider_counterfactual": {
+            "evaluated_red_or_faint_objects": 56,
+            "mean_delta_p_temp_alta_severa_vs_baja": 0.3272,
+            "mean_delta_p_lum_muy_alta_severa_vs_baja": 0.2722,
+            "mean_delta_p_sn_ia_severa_vs_baja": 0.0214
+        }
+    }
+}

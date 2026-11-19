@@ -1,0 +1,16 @@
+{
+  "version": "1.1.0",
+  "discretization_mode": "thresholds",
+  "percentile_quantiles": [0.33, 0.67],
+  "use_luminosity_from_redshift": true,
+  "hubble_constant_km_s_mpc": 70.0,
+  "thresholds": {
+    "r_kpc": [1.0, 15.0],
+    "g_minus_r": [0.0, 0.5],
+    "m_v": [17.0, 19.5],
+    "l_x": [1e39, 1e42],
+    "fwhm_kms": 3000.0,
+    "x_ray_flux": [1e-14, 1e-11],
+    "dust_extinction_ebv": [0.10, 0.50]
+  }
+}
