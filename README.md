@@ -121,15 +121,19 @@ PYTHONPATH=. python3 -m unittest discover -s tests -v
 
 ## Resultados de Validación y Auditoría Probabilística
 
-Sobre el conjunto de validación de 120 transitorios (`data/validation_set.csv`, 30 objetos por clase distribuidos en polvo `Baja`, `Moderada` y `Severa`):
+Sobre el conjunto de validación realista de 300 transitorios con ruido instrumental y evidencia parcial (`data/validation_set.csv`, 75 objetos por clase distribuidos equitativamente en polvo `Baja`, `Moderada` y `Severa`):
 
 | Métrica | Valor |
 | :--- | :---: |
-| **Accuracy Global** | `1.0000` |
-| **Brier Score Multiclase** | `0.0062` |
-| **$P(\text{Polvo}=\text{Severa} \mid E)$ inferida (Polvo real: Baja $\to$ Moderada $\to$ Severa)** | `0.1172` $\to$ `0.2211` $\to$ `0.6399` |
-| **Desplazamiento contrafactual $\Delta P(\text{Temperatura}=\text{Alta})$ (Severa vs. Baja)** | `+0.3272` |
-| **Desplazamiento contrafactual $\Delta P(\text{Luminosidad}=\text{Muy\_Alta})$ (Severa vs. Baja)** | `+0.2722` |
+| **Accuracy Global** | `0.7767` |
+| **F1-Score Macro** | `0.7830` |
+| **Brier Score Multiclase** *(referencia uniforme: `0.7500`)* | `0.3552` |
+| **Accuracy por severidad de polvo (Baja $\to$ Moderada $\to$ Severa)** | `0.82` $\to$ `0.79` $\to$ `0.72` |
+| **Entropía Posterior Media (Baja $\to$ Moderada $\to$ Severa)** | `0.60` $\to$ `0.64` $\to$ `0.76` bits |
+| **$P(\text{Polvo}=\text{Severa} \mid E)$ inferida (Baja $\to$ Moderada $\to$ Severa)** | `0.1213` $\to$ `0.2329` $\to$ `0.6643` |
+| **Contrafactual $\Delta P(\text{Temperatura}=\text{Alta})$ (Severa vs. Baja)** | `+0.4572` |
+| **Contrafactual $\Delta P(\text{Luminosidad}=\text{Muy\_Alta})$ (Severa vs. Baja)** | `+0.4029` |
+| **Contrafactual $\Delta P(\text{Tipo}=\text{SN\_Ia})$ (Severa vs. Baja)** | `+0.0787` |
 
 ### Visualizaciones Generadas
 

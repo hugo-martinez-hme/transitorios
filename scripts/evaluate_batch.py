@@ -221,77 +221,126 @@ def plot_explaining_away_summary(ea_report: Dict[str, Any], output_path: Path) -
     x = np.arange(len(severities))
     width = 0.35
 
-    fig, ax1 = plt.subplots(figsize=(7.5, 5))
+    fig, ax1 = plt.subplots(figsize=(7.8, 5.2))
     bars1 = ax1.bar(x - width / 2, accuracies, width, label="Accuracy", color="#2b5c8f")
     ax1.set_ylabel("Accuracy", color="#2b5c8f")
-    ax1.set_ylim(0.0, 1.1)
+    ax1.set_ylim(0.0, 1.18)
     ax1.set_xticks(x)
     ax1.set_xticklabels([f"Polvo {s}" for s in severities])
-    ax1.set_title("Impacto de la Extinción por Polvo (Colisionadores Fotométricos)")
+    ax1.set_title("Impacto de la Extinción por Polvo (Colisionadores Fotométricos)", pad=28)
 
     ax2 = ax1.twinx()
     bars2 = ax2.bar(x + width / 2, entropies, width, label="Entropía Shannon (bits)", color="#d97724")
     ax2.set_ylabel("Entropía Posterior Media (bits)", color="#d97724")
-    ax2.set_ylim(0.0, 2.2)
+    max_ent = max(entropies) if entropies else 1.0
+    ax2.set_ylim(0.0, max(1.6, max_ent * 1.45))
 
     for b in bars1:
-        ax1.text(b.get_x() + b.get_width() / 2, b.get_height() + 0.02, f"{b.get_height():.2f}", ha="center")
+        ax1.text(
+            b.get_x() + b.get_width() / 2,
+            b.get_height() + 0.025,
+            f"{b.get_height():.2f}",
+            ha="center",
+            fontsize=9.5,
+        )
     for b in bars2:
-        ax2.text(b.get_x() + b.get_width() / 2, b.get_height() + 0.04, f"{b.get_height():.2f}", ha="center")
+        ax2.text(
+            b.get_x() + b.get_width() / 2,
+            b.get_height() + 0.03,
+            f"{b.get_height():.2f}",
+            ha="center",
+            fontsize=9.5,
+        )
 
-    fig.legend(loc="upper right", bbox_to_anchor=(0.88, 0.88))
+    handles1, labels1 = ax1.get_legend_handles_labels()
+    handles2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(
+        handles1 + handles2,
+        labels1 + labels2,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.08),
+        ncol=2,
+        frameon=False,
+    )
+
     fig.tight_layout()
     fig.savefig(output_path, dpi=300)
     plt.close(fig)
 
 
-def generate_realistic_validation_dataset(path: Path, n_samples: int = 120, seed: int = 42) -> None:
-    """Genera un dataset sintético físicamente coherente con los 4 tipos de transitorios."""
+def generate_realistic_validation_dataset(path: Path, n_samples: int = 300, seed: int = 42) -> None:
+    """Genera un catálogo sintético realista con ruido instrumental y evidencia parcial.
+
+    Simula un flujo realista de alertas telescópicas (estilo ZTF/LSST):
+    - Solapamiento físico en magnitud, color, velocidad de expansión y rayos X.
+    - Extinción visual $A_V = 3.1 E(B-V)$ y enrojecimiento $E(g-r) \\approx 1.05 E(B-V)$.
+    - Evidencia parcial (~55% alertas tempranas sin curva de luz consolidada y ~25%
+      sin asociación de galaxia anfitriona/radio galactocéntrico).
+    """
     rng = np.random.default_rng(seed)
     path.parent.mkdir(parents=True, exist_ok=True)
     rows: List[Dict[str, Any]] = []
 
     for i in range(n_samples):
         cls = CLASSES[i % len(CLASSES)]
-        ebv = float(rng.choice([rng.uniform(0.01, 0.08), rng.uniform(0.15, 0.40), rng.uniform(0.60, 1.20)]))
-        a_v = 3.1 * ebv  # Extinción visual A_V = R_V * E(B-V)
+        dust_tier = i % 3
+        if dust_tier == 0:
+            ebv = float(rng.uniform(0.01, 0.08))
+        elif dust_tier == 1:
+            ebv = float(rng.uniform(0.16, 0.44))
+        else:
+            ebv = float(rng.uniform(0.65, 1.35))
+
+        a_v = 3.1 * ebv
+        reddening_gr = 1.05 * ebv
+        phot_noise_m = float(rng.normal(0.0, 0.45))
+        phot_noise_c = float(rng.normal(0.0, 0.14))
 
         if cls == "SN_Ia":
-            galaxia = str(rng.choice(["Eliptica", "Espiral"], p=[0.6, 0.4]))
-            r_kpc = float(rng.uniform(3.0, 20.0))
-            z = float(rng.uniform(0.02, 0.12))
-            m_v = float(rng.uniform(15.2, 16.8) + a_v)
-            g_minus_r = float(rng.uniform(-0.35, -0.05) + 0.9 * ebv)
-            vel = float(rng.uniform(8000.0, 15000.0))
-            fx = float(rng.uniform(1e-17, 5e-16))
-            curva = "Decaimiento_Rapido"
+            galaxia = str(rng.choice(["Eliptica", "Espiral", "Irregular"], p=[0.48, 0.44, 0.08]))
+            r_kpc = float(rng.uniform(0.8, 22.0))
+            z = float(rng.uniform(0.02, 0.16))
+            m_v = float(rng.normal(16.3, 0.7) + a_v + phot_noise_m)
+            g_minus_r = float(rng.normal(-0.12, 0.16) + reddening_gr + phot_noise_c)
+            vel = float(max(600.0, rng.normal(7500.0, 3200.0)))
+            fx = float(10.0 ** rng.uniform(-16.8, -14.2))
+            curva = str(rng.choice(["Decaimiento_Rapido", "Meseta", "Estocastica"], p=[0.82, 0.13, 0.05]))
         elif cls == "SN_II":
-            galaxia = str(rng.choice(["Espiral", "Irregular"], p=[0.75, 0.25]))
-            r_kpc = float(rng.uniform(2.0, 12.0))
-            z = float(rng.uniform(0.01, 0.09))
-            m_v = float(rng.uniform(16.8, 18.8) + a_v)
-            g_minus_r = float(rng.uniform(-0.1, 0.25) + 0.9 * ebv)
-            vel = float(rng.uniform(4000.0, 9000.0))
-            fx = float(rng.uniform(1e-15, 5e-14))
-            curva = "Meseta"
+            galaxia = str(rng.choice(["Espiral", "Irregular", "Eliptica"], p=[0.66, 0.28, 0.06]))
+            r_kpc = float(rng.uniform(1.0, 16.0))
+            z = float(rng.uniform(0.015, 0.12))
+            m_v = float(rng.normal(17.7, 0.8) + a_v + phot_noise_m)
+            g_minus_r = float(rng.normal(0.08, 0.22) + reddening_gr + phot_noise_c)
+            vel = float(max(400.0, rng.normal(4200.0, 2200.0)))
+            fx = float(10.0 ** rng.uniform(-15.8, -13.2))
+            curva = str(rng.choice(["Meseta", "Decaimiento_Rapido", "Estocastica"], p=[0.74, 0.20, 0.06]))
         elif cls == "AGN":
-            galaxia = str(rng.choice(["Espiral", "Eliptica"], p=[0.55, 0.45]))
-            r_kpc = float(rng.uniform(0.05, 0.8))
-            z = float(rng.uniform(0.08, 0.45))
-            m_v = float(rng.uniform(16.0, 19.0) + 0.6 * a_v)
-            g_minus_r = float(rng.uniform(-0.3, 0.2) + 0.7 * ebv)
-            vel = float(rng.uniform(3500.0, 10000.0))
-            fx = float(rng.uniform(5e-13, 2e-11))
-            curva = "Estocastica"
+            galaxia = str(rng.choice(["Espiral", "Eliptica", "Irregular"], p=[0.52, 0.40, 0.08]))
+            r_kpc = float(rng.uniform(0.05, 1.8))  # Incluye errores astrométricos cerca del núcleo
+            z = float(rng.uniform(0.05, 0.45))
+            m_v = float(rng.normal(17.5, 1.0) + 0.8 * a_v + phot_noise_m)
+            g_minus_r = float(rng.normal(0.02, 0.25) + 0.85 * reddening_gr + phot_noise_c)
+            vel = float(max(300.0, rng.normal(4500.0, 2600.0)))
+            fx = float(10.0 ** rng.uniform(-14.2, -11.4))  # Solapa régimen Débil e Intensa
+            curva = str(rng.choice(["Estocastica", "Decaimiento_Rapido", "Meseta"], p=[0.84, 0.10, 0.06]))
         else:  # Variable_Estelar
-            galaxia = str(rng.choice(["Espiral", "Irregular"], p=[0.7, 0.3]))
-            r_kpc = float(rng.uniform(2.0, 14.0))
-            z = float(rng.uniform(0.0001, 0.002))
-            m_v = float(rng.uniform(19.0, 22.0) + 0.5 * a_v)
-            g_minus_r = float(rng.uniform(0.3, 1.0) + 0.5 * ebv)
-            vel = float(rng.uniform(50.0, 800.0))
-            fx = float(rng.uniform(1e-17, 1e-15))
-            curva = "Estocastica"
+            galaxia = str(rng.choice(["Espiral", "Irregular", "Eliptica"], p=[0.62, 0.26, 0.12]))
+            r_kpc = float(rng.uniform(0.9, 18.0))
+            z = float(rng.uniform(0.0002, 0.004))
+            m_v = float(rng.normal(19.6, 1.1) + 0.7 * a_v + phot_noise_m)
+            g_minus_r = float(rng.normal(0.45, 0.30) + 0.7 * reddening_gr + phot_noise_c)
+            vel = float(max(0.0, rng.normal(1100.0, 950.0)))
+            fx = float(10.0 ** rng.uniform(-16.5, -13.8))
+            curva = str(rng.choice(["Estocastica", "Meseta", "Decaimiento_Rapido"], p=[0.82, 0.12, 0.06]))
+
+        # Simulación de evidencia parcial realista (alertas tempranas y cobertura incompleta)
+        # Bajo polvo severo la caracterización temprana es más difícil (mayor tasa de faltantes en curva)
+        p_missing_curva = 0.45 if dust_tier == 0 else (0.58 if dust_tier == 1 else 0.72)
+        if rng.random() < p_missing_curva:
+            curva = ""
+        if rng.random() < 0.25:
+            galaxia = ""
+        r_kpc_val: float | str = "" if rng.random() < 0.22 else round(r_kpc, 3)
 
         rows.append(
             {
@@ -302,7 +351,7 @@ def generate_realistic_validation_dataset(path: Path, n_samples: int = 120, seed
                 "x_ray_flux": fx,
                 "dust_extinction_ebv": round(ebv, 4),
                 "galaxia": galaxia,
-                "r_kpc": round(r_kpc, 3),
+                "r_kpc": r_kpc_val,
                 "g_minus_r": round(g_minus_r, 3),
                 "curva_luz": curva,
                 "true_class": cls,
@@ -310,7 +359,7 @@ def generate_realistic_validation_dataset(path: Path, n_samples: int = 120, seed
         )
 
     pd.DataFrame(rows).to_csv(path, index=False)
-    logger.info("Dataset sintético de validación generado en '%s' (%d objetos).", path, n_samples)
+    logger.info("Dataset sintético realista generado en '%s' (%d objetos).", path, n_samples)
 
 
 def run_evaluation(
@@ -400,4 +449,18 @@ def run_evaluation(
 
 
 if __name__ == "__main__":
-    run_evaluation()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Benchmarking masivo del modelo RAIN.")
+    parser.add_argument(
+        "--regenerate",
+        action="store_true",
+        help="Regenera data/validation_set.csv con ruido y evidencia parcial antes de evaluar.",
+    )
+    args = parser.parse_args()
+
+    default_dataset = Path("data/validation_set.csv")
+    if args.regenerate and default_dataset.exists():
+        default_dataset.unlink()
+
+    run_evaluation(dataset_path=default_dataset)
