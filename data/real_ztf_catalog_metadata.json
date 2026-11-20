@@ -1,0 +1,37 @@
+{
+    "generated_at_utc": "2026-11-20T12:27:59.429996+00:00",
+    "seed": 42,
+    "total_objects": 185,
+    "counts_by_class": {
+        "SN_Ia": 50,
+        "SN_II": 50,
+        "Variable_Estelar": 50,
+        "AGN": 35
+    },
+    "counts_by_source": {
+        "ZTF_BTS+ALeRCE": 100,
+        "ALeRCE_ZTF+IRSA_Dust": 50,
+        "ESA_XMM+SDSS_DR18": 35
+    },
+    "dust_ebv_distribution": {
+        "Baja (<0.15)": 131,
+        "Moderada (0.15-0.50)": 45,
+        "Severa (>=0.50)": 9
+    },
+    "sensor_completeness_ratio": {
+        "apparent_magnitude": 1.0,
+        "g_minus_r": 0.9892,
+        "redshift_z": 0.7297,
+        "x_ray_flux": 0.1892,
+        "velocity_km_s": 0.0,
+        "dust_extinction_ebv": 1.0,
+        "curva_luz": 0.7514
+    },
+    "sources": [
+        "ZTF Bright Transient Survey (Caltech) - https://sites.astro.caltech.edu/ztf/bts/",
+        "ALeRCE Broker (ZTF) - https://alerce.science/",
+        "ESA XMM-Newton Science Archive (4XMM EPIC TAP) - https://nxsa.esac.esa.int/",
+        "SDSS DR18 SkyServer - https://skyserver.sdss.org/dr18/",
+        "NASA/IPAC IRSA Galactic Dust Reddening and Extinction (Schlafly & Finkbeiner 2011)"
+    ]
+}

@@ -134,6 +134,34 @@ class TestRealDataAndRobustness(unittest.TestCase):
                 for dist in res.fisica_latente.values():
                     self.assertAlmostEqual(sum(dist.values()), 1.0, places=5)
 
+    def test_allow_missing_sensors_preserves_corrupt_rejection(self) -> None:
+        """Verifica evidencia parcial real en RealDataLoader sin relajar rechazo a Inf."""
+        import tempfile
+
+        csv_content = (
+            "object_id,apparent_magnitude,redshift_z,velocity_km_s,x_ray_flux,"
+            "dust_extinction_ebv,g_minus_r,curva_luz,true_class\n"
+            "ZTF_PARTIAL_OK,18.4,0.05,,,0.12,0.05,Decaimiento_Rapido,SN_Ia\n"
+            "ZTF_CORRUPT_INF,18.4,inf,,,0.12,0.05,Decaimiento_Rapido,SN_Ia\n"
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            csv_path = Path(tmpdir) / "partial_observatory.csv"
+            csv_path.write_text(csv_content, encoding="utf-8")
+
+            loader = RealDataLoader("config.json", use_percentiles=False)
+
+            # En modo estricto (por defecto) ambas filas se descartan
+            strict_records = loader.load_dataset_csv(csv_path, drop_invalid=True, allow_missing_sensors=False)
+            self.assertEqual(len(strict_records), 0)
+
+            # En modo observatorio real pasa la fila con sensores ausentes, pero se descarta Inf
+            partial_records = loader.load_dataset_csv(csv_path, drop_invalid=True, allow_missing_sensors=True)
+            self.assertEqual(len(partial_records), 1)
+            self.assertEqual(partial_records[0].object_id, "ZTF_PARTIAL_OK")
+            ev = partial_records[0].alert.to_evidence_dict()
+            self.assertNotIn("Emision_RayosX", ev)
+            self.assertNotIn("Anchura_Lineas", ev)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -34,7 +34,7 @@ class TransientRecord:
     alert: AstronomicalAlert
     dust_extinction_ebv: float
     dust_severity: str
-    redshift_z: float
+    redshift_z: Optional[float] = None
     true_class: Optional[str] = None
     raw_data: Optional[Dict[str, Any]] = None
 
@@ -56,6 +56,11 @@ class RealDataLoader:
         "redshift_z",
         "velocity_km_s",
         "x_ray_flux",
+        "dust_extinction_ebv",
+    )
+
+    CORE_NUMERIC_COLUMNS: Tuple[str, ...] = (
+        "apparent_magnitude",
         "dust_extinction_ebv",
     )
 
@@ -105,10 +110,22 @@ class RealDataLoader:
             return None
         return value
 
+    @staticmethod
+    def _parse_finite_float(value: Any, col_name: str) -> float:
+        """Valida que un dato numérico presente no esté corrupto (texto o Inf)."""
+        try:
+            num = float(value)
+        except (TypeError, ValueError) as exc:
+            raise ValidationError(f"Valor no numérico en '{col_name}': {value!r}") from exc
+        if not np.isfinite(num):
+            raise ValidationError(f"Valor no finito en '{col_name}': {value!r}")
+        return num
+
     def load_dataset_csv(
         self,
         file_path: Union[str, Path],
         drop_invalid: bool = True,
+        allow_missing_sensors: bool = False,
     ) -> List[TransientRecord]:
         """Ingiere, valida y discretiza un dataset CSV de eventos transitorios.
 
@@ -119,6 +136,10 @@ class RealDataLoader:
         drop_invalid : bool, default=True
             Si es True descarta filas corruptas registrando un warning; si es False
             relanza `ValidationError` ante la primera anomalía.
+        allow_missing_sensors : bool, default=False
+            Si es True, trata valores ausentes (`NaN`) en sensores no siempre disponibles
+            (`redshift_z`, `velocity_km_s`, `x_ray_flux`) como evidencia parcial legítima,
+            manteniendo el rechazo estricto ante valores corruptos o inválidos.
 
         Returns
         -------
@@ -146,6 +167,10 @@ class RealDataLoader:
             else self.base_config
         )
 
+        strict_numeric_cols = (
+            self.CORE_NUMERIC_COLUMNS if allow_missing_sensors else self.REQUIRED_NUMERIC_COLUMNS
+        )
+
         records: List[TransientRecord] = []
         discarded = 0
 
@@ -155,15 +180,17 @@ class RealDataLoader:
                 if obj_id_raw is None:
                     raise ValidationError("El campo obligatorio 'object_id' está vacío o nulo.")
 
-                # Verificación estricta de columnas numéricas obligatorias
                 payload: Dict[str, Any] = {}
                 for col in self.REQUIRED_NUMERIC_COLUMNS:
                     val = row[col]
-                    if pd.isna(val):
-                        raise ValidationError(f"Valor nulo en columna obligatoria '{col}'.")
-                    payload[col] = val
+                    is_missing = pd.isna(val) or (isinstance(val, str) and not val.strip())
+                    if is_missing:
+                        if col in strict_numeric_cols:
+                            raise ValidationError(f"Valor nulo en columna obligatoria '{col}'.")
+                        continue
+                    payload[col] = self._parse_finite_float(val, col)
 
-                # Campos opcionales observables (pueden ser None para evidencia parcial)
+                # Campos opcionales observables (evidencia parcial del telescopio)
                 for opt_col in self.OPTIONAL_COLUMNS:
                     if opt_col in df.columns and opt_col != "true_class":
                         cleaned = self._clean_optional(row[opt_col])
@@ -171,11 +198,13 @@ class RealDataLoader:
                             payload[opt_col] = cleaned
 
                 dust_ebv = float(payload["dust_extinction_ebv"])
-                redshift_z = float(payload["redshift_z"])
+                redshift_z: Optional[float] = (
+                    float(payload["redshift_z"]) if "redshift_z" in payload else None
+                )
                 dust_severity = discretize_dust_ebv(dust_ebv, config=active_config)
 
-                # Si no hay color directo pero sí extinción severa/baja, NO inventamos color:
-                # preservamos la evidencia parcial real del telescopio.
+                # Si falta un observable (p. ej., color, rayos X o espectroscopía),
+                # NO se imputa: la Red Bayesiana marginaliza la incertidumbre real.
                 alert = AstronomicalAlert.from_continuous(payload, config=active_config)
 
                 true_class: Optional[str] = None

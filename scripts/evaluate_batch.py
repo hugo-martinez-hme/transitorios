@@ -365,6 +365,8 @@ def generate_realistic_validation_dataset(path: Path, n_samples: int = 300, seed
 def run_evaluation(
     dataset_path: Path = Path("data/validation_set.csv"),
     config_path: Path = Path("config.json"),
+    allow_missing_sensors: bool = False,
+    output_suffix: str = "",
 ) -> Dict[str, Any]:
     """Ejecuta el pipeline completo de evaluación y exporta reportes y figuras."""
     reports_dir = Path("reports")
@@ -373,16 +375,22 @@ def run_evaluation(
     figures_dir.mkdir(parents=True, exist_ok=True)
 
     if not dataset_path.exists():
+        if output_suffix:
+            raise FileNotFoundError(f"No existe el catálogo especificado: {dataset_path}")
         generate_realistic_validation_dataset(dataset_path)
 
     loader = RealDataLoader(config_path=config_path)
-    records = loader.load_dataset_csv(dataset_path)
+    records = loader.load_dataset_csv(
+        dataset_path,
+        allow_missing_sensors=allow_missing_sensors,
+    )
 
     model = TransientModel()
     y_true: List[str] = []
     y_pred: List[str] = []
     brier_scores: List[float] = []
     prediction_details: List[Dict[str, Any]] = []
+    obs_counts: List[int] = []
 
     logger.info("Ejecutando VariableElimination sobre %d transitorios...", len(records))
     for rec in records:
@@ -392,6 +400,7 @@ def run_evaluation(
         result = model.inferir(rec.alert)
         y_true.append(rec.true_class)
         y_pred.append(result.clase_predicha)
+        obs_counts.append(len(rec.alert.to_evidence_dict()))
 
         # Brier Score multiclase: sum_c (p_c - y_c)^2
         brier = sum(
@@ -420,6 +429,9 @@ def run_evaluation(
     ea_analysis = evaluate_explaining_away(model, records, prediction_details)
 
     output_payload: Dict[str, Any] = {
+        "dataset": str(dataset_path),
+        "allow_missing_sensors": allow_missing_sensors,
+        "mean_observed_sensors": round(float(np.mean(obs_counts)), 2),
         "n_evaluated": len(y_true),
         "classes": CLASSES,
         "global_accuracy": clf_metrics["accuracy"],
@@ -430,12 +442,12 @@ def run_evaluation(
         "explaining_away_analysis": ea_analysis,
     }
 
-    metrics_file = reports_dir / "evaluation_metrics.json"
+    metrics_file = reports_dir / f"evaluation_metrics{output_suffix}.json"
     with metrics_file.open("w", encoding="utf-8") as fh:
         json.dump(output_payload, fh, indent=4, ensure_ascii=False)
 
-    cm_fig = figures_dir / "confusion_matrix_normalized.png"
-    ea_fig = figures_dir / "explaining_away_dust_analysis.png"
+    cm_fig = figures_dir / f"confusion_matrix_normalized{output_suffix}.png"
+    ea_fig = figures_dir / f"explaining_away_dust_analysis{output_suffix}.png"
     plot_confusion_matrix(cm_raw, cm_norm, CLASSES, cm_fig)
     plot_explaining_away_summary(ea_analysis, ea_fig)
 
@@ -457,10 +469,21 @@ if __name__ == "__main__":
         action="store_true",
         help="Regenera data/validation_set.csv con ruido y evidencia parcial antes de evaluar.",
     )
+    parser.add_argument(
+        "--real",
+        action="store_true",
+        help="Evalúa el catálogo multi-observatorio real (data/real_ztf_catalog.csv).",
+    )
     args = parser.parse_args()
 
-    default_dataset = Path("data/validation_set.csv")
-    if args.regenerate and default_dataset.exists():
-        default_dataset.unlink()
-
-    run_evaluation(dataset_path=default_dataset)
+    if args.real:
+        run_evaluation(
+            dataset_path=Path("data/real_ztf_catalog.csv"),
+            allow_missing_sensors=True,
+            output_suffix="_real",
+        )
+    else:
+        default_dataset = Path("data/validation_set.csv")
+        if args.regenerate and default_dataset.exists():
+            default_dataset.unlink()
+        run_evaluation(dataset_path=default_dataset)
